@@ -5,6 +5,20 @@ import "../node_modules/@wordpress/components/build-style/style.css";
 import { Panel, PanelBody, TextControl, TabPanel } from "@wordpress/components";
 import { FieldsCard } from "./FieldsCard";
 
+const printFields = (fields= {}, indent = '    ') => {
+  return Object.keys(fields).map((objKey) => {
+    return `\n${indent}'${objKey}' => [\n` +
+      `${indent}  'label' => '${fields[objKey].label}',\n` +
+      `${indent}  'input' => '${fields[objKey].input}',\n` +
+      `${indent}  'type' => '${fields[objKey].type}',\n` +
+      `${indent}  'default' => ${fields[objKey].default},\n` +
+      `${indent}  'help' => '${fields[objKey].help}',\n` +
+      (fields[objKey].query
+      ? `${indent}  'query' => [${printFields(fields[objKey].query, '    ' + indent)}],\n`
+      : "") + `${indent}]`;
+  })
+}
+
 export default function App() {
   const [fields, setFields] = useState({
     test: {
@@ -42,20 +56,7 @@ export default function App() {
               <br /> 'template' {"=>"} 'blocks/{kebabCase(blockName)}.php',
               <br /> 'settings' {"=>"} [ 'title' {"=>"} '{blockTitle}'],
               <br /> 'fields' {"=>"} [{" "}
-              {Object.keys(fields).map((objKey) => {
-                return (
-                  `\n  '${objKey}' => [\n` +
-                  `    'label' => '${fields[objKey].label}',\n` +
-                  `    'input' => '${fields[objKey].input}',\n` +
-                  `    'type' => '${fields[objKey].type}',\n` +
-                  `    'default' => ${fields[objKey].default},\n` +
-                  `    'help' => '${fields[objKey].help}',\n` +
-                  `    'query' => '${JSON.stringify(
-                    fields[objKey].query
-                  )}',\n` +
-                  `  ]\n`
-                );
-              })}
+              {printFields(fields || {})}
               ]
               <br />
               ]);
