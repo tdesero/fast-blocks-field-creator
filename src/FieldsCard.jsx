@@ -7,6 +7,7 @@ import {
   Modal,
   TextControl,
   SelectControl,
+  ToggleControl,
 } from "@wordpress/components";
 import { Icon, edit, trash, plusCircle, blockDefault } from "@wordpress/icons";
 import { iconMap } from "./iconMap";
@@ -16,7 +17,7 @@ import {
   getDefaultValueByInputControl,
 } from "./fieldTypeMap";
 
-const updateField = ({setFields, fields, name, label, input, help, query}) => {
+const updateField = ({setFields, fields, name, label, input, help, query, focalPointPicker}) => {
   if (!name) {
     return false;
   }
@@ -29,6 +30,7 @@ const updateField = ({setFields, fields, name, label, input, help, query}) => {
       default: getDefaultValueByInputControl(input),
       help: help,
       ...(query ? { query } : {}),
+      ...(focalPointPicker ? { focalPointPicker } : {}),
     },
   });
   return true;
@@ -115,22 +117,27 @@ function Field({fields, setFields, field, objKey}) {
           />
         </div>
         {fields[objKey].input === "repeater" && (
-          <FieldsCard
-            fields={repeaterFields}
-            setFields={setRepeaterFieldsAndParentFields}
-          />
+          <div style={{ marginTop: "0.5rem" }}>
+            <FieldsCard
+              fields={repeaterFields}
+              setFields={setRepeaterFieldsAndParentFields}
+            />
+          </div>
         )}
       </CardBody>
       <CardDivider />
 
-      {isOpen &&
-        <FieldsModal {...{
-          fieldObjKey: objKey,
-          field,
-          setOpen,
-          addField: (props) => updateField({setFields, fields, ...props}),
-          fields
-        }}/>}
+      {isOpen && (
+        <FieldsModal
+          {...{
+            fieldObjKey: objKey,
+            field,
+            setOpen,
+            addField: (props) => updateField({ setFields, fields, ...props }),
+            fields,
+          }}
+        />
+      )}
     </>
   );
 }
@@ -146,6 +153,8 @@ function FieldsModal({
   const [currentFieldLabel, setCurrentFieldLabel] = useState(field?.label || '');
   const [currentFieldInput, setCurrentFieldInput] = useState(field?.input || '');
   const [currentFieldHelpText, setCurrentFieldHelpText] = useState(field?.help || '');
+
+  const [hasFocalPointPicker, setHasFocalPointPicker] = useState(false);
 
   const onLabelChange = (value) => {
     setCurrentFieldLabel(value);
@@ -209,6 +218,13 @@ function FieldsModal({
           { value: "postTypeEntry", label: "PostTypeEntry" },
         ]}
       />
+      {currentFieldInput === "image" && (
+        <ToggleControl
+          label="Show a focal point picker"
+          onChange={setHasFocalPointPicker}
+          checked={hasFocalPointPicker}
+        />
+      )}
       <TextControl
         label="Field Help Text"
         value={currentFieldHelpText}
@@ -216,12 +232,15 @@ function FieldsModal({
       />
       <Button
         onClick={() => {
-          if (addOrUpdateField({
-            name: currentFieldName,
-            label: currentFieldLabel,
-            input: currentFieldInput,
-            help: currentFieldHelpText
-          })) {
+          if (
+            addOrUpdateField({
+              name: currentFieldName,
+              label: currentFieldLabel,
+              input: currentFieldInput,
+              help: currentFieldHelpText,
+              ...(hasFocalPointPicker ? { focalPointPicker: hasFocalPointPicker } : {}),
+            })
+          ) {
             setOpen(false);
           }
         }}
